@@ -22,6 +22,7 @@ export type MarketDataType = {
   isFork?: boolean;
   permissionComponent?: ReactNode;
   addresses: {
+    BICONOMY_PROXY?: string;
     LENDING_POOL_ADDRESS_PROVIDER: string;
     LENDING_POOL: string;
     WETH_GATEWAY?: string;
@@ -298,6 +299,7 @@ export const marketsData: {
     rpcOnly: true,
     addresses: {
       LENDING_POOL_ADDRESS_PROVIDER: '0xc4dCB5126a3AfEd129BC3668Ea19285A9f56D15D'.toLowerCase(),
+      BICONOMY_PROXY: '0xFDBa0cD4129fcA646845d71234d5A16353Ed111c',
       LENDING_POOL: '0x368EedF3f56ad10b9bC57eed4Dac65B26Bb667f6',
       WETH_GATEWAY: '0xd5B55D3Ed89FDa19124ceB5baB620328287b915d',
       FAUCET: '0x1ca525Cd5Cb77DB5Fa9cBbA02A0824e283469DBe',
@@ -592,6 +594,7 @@ export const marketsData: {
     },
     rpcOnly: true,
     addresses: {
+      BICONOMY_PROXY: '0x77cCf0A218D054662c743b94aBDc57fA98D06b68',
       LENDING_POOL_ADDRESS_PROVIDER: '0x5343b5bA672Ae99d627A1C87866b8E53F47Db2E6'.toLowerCase(),
       LENDING_POOL: '0x6C9fB0D5bD9429eb9Cd96B85B81d872281771E6B',
       WETH_GATEWAY: '0x2a58E9bbb5434FdA7FF78051a4B82cb0EF669C17',

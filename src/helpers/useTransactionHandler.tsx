@@ -20,6 +20,7 @@ interface UseTransactionHandlerProps {
   skip?: boolean;
   deps?: DependencyList;
   useBiconomy?: boolean;
+  isForward?: boolean;
 }
 
 export const useTransactionHandler = ({
@@ -28,6 +29,7 @@ export const useTransactionHandler = ({
   tryPermit = false,
   skip,
   useBiconomy,
+  isForward,
   deps = [],
 }: UseTransactionHandlerProps) => {
   const {
@@ -52,42 +54,12 @@ export const useTransactionHandler = ({
   const [approvalTx, setApprovalTx] = useState<EthereumTransactionTypeExtended | undefined>();
   const [actionTx, setActionTx] = useState<EthereumTransactionTypeExtended | undefined>();
   const mounted = useRef(false);
-
-  const tokenAddress = '0x9A753f0F7886C9fbF63cF59D0D4423C5eFaCE95B';
   useEffect(() => {
     mounted.current = true; // Will set it to true on mount ...
     return () => {
       mounted.current = false;
     }; // ... and to false on unmount
   }, []);
-
-  /**  useEffect(() => {
-
-    const bcp =async()=> {
-      console.log("AAAAA",currentAccount)
-      const Proxy: AaveBiconomyForwarderService = BiconomyProxy as AaveBiconomyForwarderService;
-      
-      let Payload = await Proxy.depositToAave({
-        user: currentAccount,
-        asset: tokenAddress,
-        amount: "10",
-        onBehalfOf:currentAccount,
-        referralCode:"0"
-      });
-      
-      console.log("F",Payload)
-      let adata = await Payload[0].tx();
-     
-      
-      console.log("GDA",tokenAddress)
-       console.log("APAY",adata);
-      const r=await sendBiconomyTx(adata);
-      console.log("R",r);
-    }
-    bcp();
-    
-  }, []);
-  */
   /**
    * Executes the transactions and handles loading & error states.
    * @param fn
@@ -266,6 +238,9 @@ export const useTransactionHandler = ({
         setMainTxState({ ...mainTxState, loading: true });
         const params = await actionTx.tx();
         delete params.gasPrice;
+
+        console.log('here');
+        //send Tx to Biconomy Tx Flow
         return processTx({
           tx: useBiconomy ? () => sendBiconomyTx(params) : () => sendTx(params),
           successCallback: (txnResponse: TransactionResponse) => {

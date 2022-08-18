@@ -1,6 +1,6 @@
 import { Pool, AaveBiconomyForwarderService } from '@aave/contract-helpers';
 import { Trans } from '@lingui/macro';
-import { BoxProps, Box, Button, Typography } from '@mui/material';
+import { BoxProps, Box, Button } from '@mui/material';
 import { utils } from 'ethers';
 import { ComputedReserveData } from 'src/hooks/app-data-provider/useAppDataProvider';
 import { useProtocolDataContext } from 'src/hooks/useProtocolDataContext';
@@ -31,7 +31,8 @@ export const SupplyActions = ({
   blocked,
   ...props
 }: SupplyActionProps) => {
-  const [biconomy, setBiconomy] = useState<boolean>(true);
+  const [biconomy, setBiconomy] = useState<boolean>(false);
+  const [isForward, setIsForward] = useState<boolean>(false);
   const { lendingPool, BiconomyProxy } = useTxBuilderContext();
   const { currentChainId: chainId, currentMarketData } = useProtocolDataContext();
   const { currentAccount } = useWeb3Context();
@@ -39,10 +40,13 @@ export const SupplyActions = ({
   const { approval, action, requiresApproval, loadingTxns, approvalTxState, mainTxState } =
     useTransactionHandler({
       useBiconomy: biconomy,
+      isForward: isForward,
       tryPermit:
         currentMarketData.v3 && permitByChainAndToken[chainId]?.[utils.getAddress(poolAddress)],
       handleGetTxns: async () => {
+        //Use biconomy relayer contract for transaction
         if (biconomy) {
+          console.log('biconomy :>> ', biconomy);
           const proxy: AaveBiconomyForwarderService = BiconomyProxy as AaveBiconomyForwarderService;
           return proxy.depositToAave({
             user: currentAccount,
@@ -80,25 +84,44 @@ export const SupplyActions = ({
         });
       },
       skip: !amountToSupply || parseFloat(amountToSupply) === 0,
-      deps: [amountToSupply, poolAddress, biconomy],
+      deps: [amountToSupply, poolAddress, biconomy, isForward],
     });
 
   return (
     <Box>
       <Button
+        disabled={currentMarketData.addresses.BICONOMY_PROXY ? false : true}
         onClick={() => {
           setBiconomy(true);
         }}
       >
-        Use Biconomy
+        Biconomy Transaction
       </Button>
       <Button
         onClick={() => {
           setBiconomy(false);
         }}
       >
-        Proceed without Biconomy
+        Normal Transaction
       </Button>
+      {biconomy && (
+        <>
+          <Button
+            onClick={() => {
+              setIsForward(true);
+            }}
+          >
+            Use Forward
+          </Button>
+          <Button
+            onClick={() => {
+              setIsForward(false);
+            }}
+          >
+            Use without Gas
+          </Button>
+        </>
+      )}
       <TxActionsWrapper
         blocked={blocked}
         mainTxState={mainTxState}

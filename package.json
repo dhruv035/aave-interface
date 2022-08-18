@@ -27,7 +27,6 @@
     "test:ci": "jest --ci"
   },
   "dependencies": {
-
     "@aave/contract-helpers": "^1.5.0",
     "@aave/math-utils": "1.4.0",
     "@apollo/client": "^3.5.10",
@@ -67,6 +66,7 @@
     "d3-array": "^3.1.1",
     "d3-time-format": "^4.1.0",
     "dayjs": "^1.11.3",
+    "eth-block-tracker": "^5.0.1",
     "eth-provider": "^0.10.0",
     "ethereum-blockies-base64": "^1.0.2",
     "ethers": "^5.5.4",

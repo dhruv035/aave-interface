@@ -286,12 +286,57 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     throw new Error('Error sending transaction. Provider not found');
   };
 
+  //send Tx using biconomy provider
   const sendBiconomyTx = async (txData: transactionType): Promise<TransactionResponse> => {
     if (provider) {
-      console.log('aa', txData);
       txData.signatureType = 'EIP712_SIGN';
-      const api = 'I8c1XB-l6.ed819000-2f9a-43d0-8c76-583b9b77bb98';
-      let biconomy = new Biconomy(provider.provider, {
+      console.log('txData :>> ', txData);
+      const api = 'I8c1XB-l6.ed819000-f9a-43d0-8c76-583b9b77bb98';
+      console.log('api :>> ', api);
+      const biconomy = new Biconomy(provider.provider, {
+        apiKey: api,
+        debug: true,
+      });
+      //return a promise that resolves to transaction response
+      const a = new Promise<TransactionResponse>((resolve, reject) => {
+        biconomy
+          .onEvent(biconomy.READY, async () => {
+            const bProvider = biconomy.getEthersProvider();
+
+            //send Tx with biconomy provider wrapper, it handles collection of signature from user
+            let txResponse: string;
+            try {
+              txResponse = await bProvider.send('eth_sendTransaction', [txData]);
+              const result = provider.getTransaction(txResponse);
+              console.log('Transaction hash : ', result);
+              resolve(result);
+            } catch (error) {
+              console.log('error :>> ', error);
+              reject(new Error(error.message));
+            }
+            //Use the hash obtained from the biconomy provider to fetch full TransactionResponse
+          })
+          .onEvent(biconomy.ERROR, (error) => {
+            console.log('HHerror :>> ', error);
+            reject(new Error(error.message));
+          });
+      });
+      return a;
+    }
+    throw new Error('Error sending transaction. Provider not found');
+  };
+
+  //Forward Biconomy Tx
+  //TODO: Add token Address flow from modal to here
+  //TODO: Add a flow for permit of gas tokens
+  const sendBiconomyForwardTx = async (txData: transactionType): Promise<TransactionResponse> => {
+    if (provider) {
+      const tokenAddress = '0xDF1742fE5b0bFc12331D8EAec6b478DfDbD31464';
+      let ercForwarderClient;
+      let permitClient;
+      console.log('aa', txData);
+      const api = process.env.BICONOMY_API_KEY;
+      const biconomy = new Biconomy(provider.provider, {
         apiKey: api,
         debug: true,
       });
@@ -300,12 +345,29 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
         biconomy
           .onEvent(biconomy.READY, async () => {
             // Initialize your dapp here like getting user accounts etc
-            const bprovider = biconomy.getEthersProvider();
-            const txResponse: string = await bprovider.send('eth_sendTransaction', [txData]);
-            const result = provider.getTransaction(txResponse);
-            console.log('Transaction hash : ', result);
-            biconomy = undefined;
-            resolve(result);
+            ercForwarderClient = biconomy.erc20ForwarderClient;
+            permitClient = biconomy.permitClient;
+            console.log('ercForwarderClient :>> ', ercForwarderClient);
+            console.log('permitClient :>> ', permitClient);
+            const builtTx = await ercForwarderClient.buildTx({
+              to: txData.to,
+              token: tokenAddress,
+              txGas: txData.gasLimit,
+              data: txData.data,
+            });
+            const tx = builtTx.request;
+            //Show the fee to your users!!!
+            const fee = builtTx.cost;
+            // number of ERC20 tokens user will pay on behalf of gas for this transaction
+            console.log(fee);
+
+            // returns a json object with txHash (if transaction is successful), log, message, code and flag
+            const txResponse = await ercForwarderClient.sendTxEIP712Sign({ req: tx });
+            //const bprovider = biconomy.getEthersProvider();
+            //const txResponse: string = await bprovider.send('eth_sendTransaction', [txData]);
+            //const result = provider.getTransaction(txResponse);
+            console.log('Transaction hash : ', txResponse);
+            resolve(txResponse);
           })
           .onEvent(biconomy.ERROR, (error: string) => {
             reject(new Error(error));

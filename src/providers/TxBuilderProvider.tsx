@@ -26,7 +26,7 @@ export const TxBuilderProvider: React.FC<{ children: ReactElement }> = ({ childr
   const { currentMarketData, jsonRpcProvider } = useProtocolDataContext();
 
   let BiconomyProxy = undefined;
-  const proxyAddress = '0x77cCf0A218D054662c743b94aBDc57fA98D06b68';
+  const proxyAddress = '0xFDBa0cD4129fcA646845d71234d5A16353Ed111c';
   let lendingPool;
   if (!currentMarketData.v3) {
     lendingPool = new LendingPool(jsonRpcProvider, {
@@ -43,8 +43,13 @@ export const TxBuilderProvider: React.FC<{ children: ReactElement }> = ({ childr
       WETH_GATEWAY: currentMarketData.addresses.WETH_GATEWAY,
       L2_ENCODER: currentMarketData.addresses.L2_ENCODER,
     });
-    BiconomyProxy = new AaveBiconomyForwarderService(jsonRpcProvider, proxyAddress);
-    console.log('HHH', BiconomyProxy);
+    //TODO Replace to Only instantiate when an Address is available
+    BiconomyProxy = new AaveBiconomyForwarderService(
+      jsonRpcProvider,
+      currentMarketData.addresses.BICONOMY_PROXY
+        ? currentMarketData.addresses.BICONOMY_PROXY
+        : proxyAddress
+    );
   }
 
   const faucetService = new FaucetService(jsonRpcProvider, currentMarketData.addresses.FAUCET);
